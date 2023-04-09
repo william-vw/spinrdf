@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -65,8 +66,10 @@ import org.apache.jena.sparql.path.P_FixedLength;
 import org.apache.jena.sparql.path.P_Inverse;
 import org.apache.jena.sparql.path.P_Link;
 import org.apache.jena.sparql.path.P_Mod;
+import org.apache.jena.sparql.path.P_NegPropSet;
 import org.apache.jena.sparql.path.P_OneOrMore1;
 import org.apache.jena.sparql.path.P_OneOrMoreN;
+import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.P_Path1;
 import org.apache.jena.sparql.path.P_ReverseLink;
 import org.apache.jena.sparql.path.P_Seq;
@@ -96,8 +99,32 @@ import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.XSD;
-import org.spinrdf.model.*;
-import org.spinrdf.model.update.*;
+import org.spinrdf.model.Argument;
+import org.spinrdf.model.Ask;
+import org.spinrdf.model.Construct;
+import org.spinrdf.model.Describe;
+import org.spinrdf.model.ElementList;
+import org.spinrdf.model.Exists;
+import org.spinrdf.model.Function;
+import org.spinrdf.model.FunctionCall;
+import org.spinrdf.model.Minus;
+import org.spinrdf.model.NamedGraph;
+import org.spinrdf.model.NotExists;
+import org.spinrdf.model.Optional;
+import org.spinrdf.model.SPINFactory;
+import org.spinrdf.model.Select;
+import org.spinrdf.model.Union;
+import org.spinrdf.model.Values;
+import org.spinrdf.model.Variable;
+import org.spinrdf.model.update.Clear;
+import org.spinrdf.model.update.Create;
+import org.spinrdf.model.update.DeleteData;
+import org.spinrdf.model.update.DeleteWhere;
+import org.spinrdf.model.update.Drop;
+import org.spinrdf.model.update.InsertData;
+import org.spinrdf.model.update.Load;
+import org.spinrdf.model.update.Modify;
+import org.spinrdf.model.update.Update;
 import org.spinrdf.system.ExtraPrefixes;
 import org.spinrdf.system.SPINPreferences;
 import org.spinrdf.util.JenaDatatypes;
@@ -778,6 +805,15 @@ public class ARQ2SPIN {
 			P_ReverseLink rl = (P_ReverseLink) path;
 			Resource r = model.createResource(SP.ReverseLinkPath);
 			r.addProperty(SP.node, model.asRDFNode(rl.getNode()));
+			return r;
+		// based on fork https://github.com/keski/spinrdf
+		} else if(path instanceof P_NegPropSet) {
+			P_NegPropSet neg = (P_NegPropSet) path;
+			Resource r = model.createResource(SP.NegatedPath);
+			Resource subPath = model.createList(neg.getNodes()
+					.stream().map(n -> createPath(n))
+					.collect(Collectors.toList()).iterator());
+			r.addProperty(SP.subPath, subPath);
 			return r;
 		}
 		else {

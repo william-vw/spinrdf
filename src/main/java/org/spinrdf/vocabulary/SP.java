@@ -126,6 +126,9 @@ public class SP {
     public final static Resource ReverseLinkPath = ResourceFactory.createResource(NS + "ReverseLinkPath");
 
     public final static Resource ReversePath = ResourceFactory.createResource(NS + "ReversePath");
+    
+    // based on fork https://github.com/keski/spinrdf
+    public final static Resource NegatedPath = ResourceFactory.createResource(NS + "NegatedPath");
 
     public final static Resource Select = ResourceFactory.createResource(NS + "Select");
 

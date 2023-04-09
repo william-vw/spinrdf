@@ -263,6 +263,15 @@ sp:ReversePath
   rdfs:label "Reverse path"^^xsd:string ;
   rdfs:subClassOf sp:Path ;
 .
+
+# based on fork https://github.com/keski/spinrdf
+sp:NegatedPath
+  rdf:type rdfs:Class ;
+  rdfs:comment "A negated property path." ;
+  rdfs:label "Negated path"^^xsd:string ;
+  rdfs:subClassOf sp:Path ;
+.
+
 sp:Sample
   rdf:type rdfs:Class ;
   rdfs:comment "Represents SAMPLE aggregations"^^xsd:string ;
