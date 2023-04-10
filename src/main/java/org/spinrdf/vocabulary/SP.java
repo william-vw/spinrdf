@@ -123,6 +123,8 @@ public class SP {
 
     public final static Resource Query = ResourceFactory.createResource(NS + "Query");
 
+    public final static Resource LinkPath = ResourceFactory.createResource(NS + "LinkPath");
+    
     public final static Resource ReverseLinkPath = ResourceFactory.createResource(NS + "ReverseLinkPath");
 
     public final static Resource ReversePath = ResourceFactory.createResource(NS + "ReversePath");

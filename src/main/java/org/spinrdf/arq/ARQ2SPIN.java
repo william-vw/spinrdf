@@ -803,7 +803,8 @@ public class ARQ2SPIN {
 		}
 		else if(path instanceof P_ReverseLink) {
 			P_ReverseLink rl = (P_ReverseLink) path;
-			Resource r = model.createResource(SP.ReverseLinkPath);
+			Resource r = model.createResource(rl.getNode().getURI() + "_rev");
+			r.addProperty(RDF.type, SP.ReverseLinkPath);
 			r.addProperty(SP.node, model.asRDFNode(rl.getNode()));
 			return r;
 		// based on fork https://github.com/keski/spinrdf
@@ -811,7 +812,20 @@ public class ARQ2SPIN {
 			P_NegPropSet neg = (P_NegPropSet) path;
 			Resource r = model.createResource(SP.NegatedPath);
 			Resource subPath = model.createList(neg.getNodes()
-					.stream().map(n -> createPath(n))
+					.stream().map(step -> {
+						Node node = null; Resource r2 = null;
+						if (step instanceof P_ReverseLink) {
+							node = ((P_ReverseLink) step).getNode();
+							r2 = model.createResource(node.getURI() + "_revlink");
+							r2.addProperty(RDF.type, SP.ReverseLinkPath);
+						} else {
+							node = ((P_Link) step).getNode();
+							r2 = model.createResource(node.getURI() + "_link");
+							r2.addProperty(RDF.type, SP.LinkPath);
+						}
+						r2.addProperty(SP.node, model.asRDFNode(node));
+						return r2;
+					})
 					.collect(Collectors.toList()).iterator());
 			r.addProperty(SP.subPath, subPath);
 			return r;
