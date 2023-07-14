@@ -18,7 +18,6 @@
 package org.spinrdf.inference;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -26,9 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolutionMap;
@@ -38,16 +34,13 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.update.Update;
-import org.apache.jena.update.UpdateExecutionFactory;
-import org.apache.jena.update.UpdateProcessor;
-import org.apache.jena.vocabulary.RDF;
 import org.spinrdf.arq.ARQFactory;
-import org.spinrdf.model.Command;
 import org.spinrdf.progress.ProgressMonitor;
 import org.spinrdf.statistics.SPINStatistics;
-import org.spinrdf.system.SPINLabels;
-import org.spinrdf.util.*;
+import org.spinrdf.util.CommandWrapper;
+import org.spinrdf.util.JenaUtil;
+import org.spinrdf.util.QueryWrapper;
+import org.spinrdf.util.SPINQueryFinder;
 import org.spinrdf.vocabulary.SPIN;
 
 
@@ -182,22 +175,22 @@ public class SPINInferences {
 		
 		// Get sorted list of Rules and remember where they came from
 		List<CommandWrapper> rulesList = new ArrayList<CommandWrapper>();
-		Map<CommandWrapper,Resource> rule2Class = new HashMap<CommandWrapper,Resource>();
+//		Map<CommandWrapper,Resource> rule2Class = new HashMap<CommandWrapper,Resource>();
 		for(Resource cls : class2Query.keySet()) {
 			List<CommandWrapper> queryWrappers = class2Query.get(cls);
 			for(CommandWrapper queryWrapper : queryWrappers) {
 				rulesList.add(queryWrapper);
-				rule2Class.put(queryWrapper, cls);
+//				rule2Class.put(queryWrapper, cls);
 			}
 		}
-		if(comparator != null) {
-			Collections.sort(rulesList, comparator);
-		}
+//		if(comparator != null) {
+//			Collections.sort(rulesList, comparator);
+//		}
 		
 		// Make sure the rulePredicate has a Model attached to it
-		if(rulePredicate.getModel() == null) {
-			rulePredicate = queryModel.getProperty(rulePredicate.getURI());
-		}
+//		if(rulePredicate.getModel() == null) {
+//			rulePredicate = queryModel.getProperty(rulePredicate.getURI());
+//		}
 		
 		// Iterate
 		int iteration = 1;
@@ -218,46 +211,47 @@ public class SPINInferences {
 					}
 				}
 				
-				Resource cls = rule2Class.get(arqWrapper);
+//				Resource cls = rule2Class.get(arqWrapper);
 					
-				if(monitor != null) {
-					
-					if(monitor.isCanceled()) {
-						return iteration - 1;
-					}
-					
-					StringBuffer sb = new StringBuffer("TopSPIN iteration ");
-					sb.append(iteration);
-					sb.append(" at ");
-					sb.append(SPINLabels.get().getLabel(cls));
-					sb.append(", rule ");
-					sb.append(arqWrapper.getLabel() != null ? arqWrapper.getLabel() : arqWrapper.getText());
-					monitor.subTask(sb.toString());
-				}
-
-				StringBuffer sb = new StringBuffer();
-				sb.append("Inferred by ");
-				sb.append(SPINLabels.get().getLabel(rulePredicate));
-				sb.append(" at class ");
-				sb.append(SPINLabels.get().getLabel(cls));
-				sb.append(":\n\n" + arqWrapper.getText());
-				String explanationText = sb.toString();
+//				if(monitor != null) {
+//					
+//					if(monitor.isCanceled()) {
+//						return iteration - 1;
+//					}
+//					
+//					StringBuffer sb = new StringBuffer("TopSPIN iteration ");
+//					sb.append(iteration);
+//					sb.append(" at ");
+//					sb.append(SPINLabels.get().getLabel(cls));
+//					sb.append(", rule ");
+//					sb.append(arqWrapper.getLabel() != null ? arqWrapper.getLabel() : arqWrapper.getText());
+//					monitor.subTask(sb.toString());
+//				}
+//
+//				StringBuffer sb = new StringBuffer();
+//				sb.append("Inferred by ");
+//				sb.append(SPINLabels.get().getLabel(rulePredicate));
+//				sb.append(" at class ");
+//				sb.append(SPINLabels.get().getLabel(cls));
+//				sb.append(":\n\n" + arqWrapper.getText());
+//				String explanationText = sb.toString();
+				
 				boolean thisUnbound = arqWrapper.isThisUnbound();
-				changed |= runCommandOnClass(arqWrapper, arqWrapper.getLabel(), queryModel, newTriples, cls, true, class2Constructor, statistics, explanations, explanationText, newRules, thisUnbound, monitor);
-				if(!SPINUtil.isRootClass(cls) && !thisUnbound) {
-					Set<Resource> subClasses = JenaUtil.getAllSubClasses(cls);
-					for(Resource subClass : subClasses) {
-						changed |= runCommandOnClass(arqWrapper, arqWrapper.getLabel(), queryModel, newTriples, subClass, true, class2Constructor, statistics, explanations, explanationText, newRules, thisUnbound, monitor);
-					}
-				}
+				changed |= runCommandOnClass(arqWrapper, arqWrapper.getLabel(), queryModel, newTriples, null, true, class2Constructor, null, null, "xyz", newRules, thisUnbound, null);
+//				if(!SPINUtil.isRootClass(cls) && !thisUnbound) {
+//					Set<Resource> subClasses = JenaUtil.getAllSubClasses(cls);
+//					for(Resource subClass : subClasses) {
+//						changed |= runCommandOnClass(arqWrapper, arqWrapper.getLabel(), queryModel, newTriples, subClass, true, class2Constructor, statistics, explanations, explanationText, newRules, thisUnbound, monitor);
+//					}
+//				}
 			}
 			iteration++;
 			
-			if(!newRules.isEmpty() && !singlePass) {
-				for(Statement s : newRules) {
-					SPINQueryFinder.add(class2Query, queryModel.asStatement(s.asTriple()), queryModel, true, false);
-				}
-			}
+//			if(!newRules.isEmpty() && !singlePass) {
+//				for(Statement s : newRules) {
+//					SPINQueryFinder.add(class2Query, queryModel.asStatement(s.asTriple()), queryModel, true, false);
+//				}
+//			}
 		}
 		while(!singlePass && changed);
 		
@@ -281,133 +275,133 @@ public class SPINInferences {
 			ProgressMonitor monitor) {
 		
 		// Check if query is needed at all
-		if(thisUnbound || SPINUtil.isRootClass(cls) || queryModel.contains(null, RDF.type, cls)) {
+//		if(thisUnbound || SPINUtil.isRootClass(cls) || queryModel.contains(null, RDF.type, cls)) {
 			boolean changed = false;
 			QuerySolutionMap bindings = new QuerySolutionMap();
-			boolean needsClass = !SPINUtil.isRootClass(cls) && !thisUnbound;
-			Map<String,RDFNode> initialBindings = commandWrapper.getTemplateBinding();
-			if(initialBindings != null) {
-				for(String varName : initialBindings.keySet()) {
-					RDFNode value = initialBindings.get(varName);
-					bindings.add(varName, value);
-				}
-			}
+//			boolean needsClass = !SPINUtil.isRootClass(cls) && !thisUnbound;
+//			Map<String,RDFNode> initialBindings = commandWrapper.getTemplateBinding();
+//			if(initialBindings != null) {
+//				for(String varName : initialBindings.keySet()) {
+//					RDFNode value = initialBindings.get(varName);
+//					bindings.add(varName, value);
+//				}
+//			}
 			long startTime = System.currentTimeMillis();
 			final Map<Resource,Resource> newInstances = new HashMap<Resource,Resource>();
 			if(commandWrapper instanceof QueryWrapper) {
 				Query arq = ((QueryWrapper)commandWrapper).getQuery();
 				Model cm;
-				if(commandWrapper.isThisDeep() && needsClass) {
-					
-					// If there is no simple way to bind ?this inside of the query then
-					// do the iteration over all instances in an "outer" loop
-					cm = JenaUtil.createDefaultModel();
-					StmtIterator it = queryModel.listStatements(null, RDF.type, cls);
-					while(it.hasNext()) {
-						Resource instance = it.next().getSubject();
-						QueryExecution qexec = ARQFactory.get().createQueryExecution(arq, queryModel);
-						bindings.add(SPIN.THIS_VAR_NAME, instance);
-						qexec.setInitialBinding(bindings);
-						qexec.execConstruct(cm);
-						qexec.close();
-					}
-				}
-				else {
-					if(needsClass) {
-						bindings.add(SPINUtil.TYPE_CLASS_VAR_NAME, cls);
-					}
+//				if(commandWrapper.isThisDeep() && needsClass) {
+//					
+//					// If there is no simple way to bind ?this inside of the query then
+//					// do the iteration over all instances in an "outer" loop
+//					cm = JenaUtil.createDefaultModel();
+//					StmtIterator it = queryModel.listStatements(null, RDF.type, cls);
+//					while(it.hasNext()) {
+//						Resource instance = it.next().getSubject();
+//						QueryExecution qexec = ARQFactory.get().createQueryExecution(arq, queryModel);
+//						bindings.add(SPIN.THIS_VAR_NAME, instance);
+//						qexec.setInitialBinding(bindings);
+//						qexec.execConstruct(cm);
+//						qexec.close();
+//					}
+//				}
+//				else {
+//					if(needsClass) {
+//						bindings.add(SPINUtil.TYPE_CLASS_VAR_NAME, cls);
+//					}
 					QueryExecution qexec = ARQFactory.get().createQueryExecution(arq, queryModel, bindings);
 					cm = qexec.execConstruct();
 					qexec.close();
-				}
+//				}
 				StmtIterator cit = cm.listStatements();
 				while(cit.hasNext()) {
 					Statement s = cit.next();
 					if(!checkContains || !queryModel.contains(s)) {
 						changed = true;
 						newTriples.add(s);
-						if(explanations != null && commandWrapper.getStatement() != null) {
-							Resource source = commandWrapper.getStatement().getSubject();
-							explanations.put(s.asTriple(), explanationText, source.asNode(), 
-									commandWrapper.getSource() != null ? commandWrapper.getSource().asNode() : null);
-						}
+//						if(explanations != null && commandWrapper.getStatement() != null) {
+//							Resource source = commandWrapper.getStatement().getSubject();
+//							explanations.put(s.asTriple(), explanationText, source.asNode(), 
+//									commandWrapper.getSource() != null ? commandWrapper.getSource().asNode() : null);
+//						}
 						
-						// New rdf:type triple -> run constructors later
-						if(RDF.type.equals(s.getPredicate()) && s.getObject().isResource()) {
-							Resource subject = s.getSubject().inModel(queryModel);
-							newInstances.put(subject, s.getResource());
-						}
-						
-						if(SPIN.rule.equals(s.getPredicate())) {
-							newRules.add(s);
-						}
+//						// New rdf:type triple -> run constructors later
+//						if(RDF.type.equals(s.getPredicate()) && s.getObject().isResource()) {
+//							Resource subject = s.getSubject().inModel(queryModel);
+//							newInstances.put(subject, s.getResource());
+//						}
+//						
+//						if(SPIN.rule.equals(s.getPredicate())) {
+//							newRules.add(s);
+//						}
 					}
 				}
 			}
-			else {
-				UpdateWrapper updateWrapper = (UpdateWrapper) commandWrapper;
-				Map<String,RDFNode> templateBindings = commandWrapper.getTemplateBinding();
-				Dataset dataset = ARQFactory.get().getDataset(queryModel);
-				Update update = updateWrapper.getUpdate();
-				Iterable<Graph> updateGraphs = UpdateUtil.getUpdatedGraphs(update, dataset.asDatasetGraph(), templateBindings);
-				ControlledUpdateGraphStore cugs = new ControlledUpdateGraphStore(dataset, updateGraphs);
-				
-				if(commandWrapper.isThisDeep() && needsClass) {
-					for(Statement s : queryModel.listStatements(null, RDF.type, cls).toList()) {
-						Resource instance = s.getSubject();
-						bindings.add(SPIN.THIS_VAR_NAME, instance);
-						UpdateProcessor up = UpdateExecutionFactory.create(update, cugs, JenaUtil.asBinding(bindings));
-						up.execute();
-					}
-				}
-				else {
-					if(needsClass) {
-						bindings.add(SPINUtil.TYPE_CLASS_VAR_NAME, cls);
-					}
-					UpdateProcessor up = UpdateExecutionFactory.create(update, cugs, JenaUtil.asBinding(bindings));
-					up.execute();
-				}
-				
-				for(ControlledUpdateGraph cug : cugs.getControlledUpdateGraphs()) {
-					changed |= cug.isChanged();
-					for(Triple triple : cug.getAddedTriples()) {
-						if(RDF.type.asNode().equals(triple.getPredicate()) && !triple.getObject().isLiteral()) {
-							Resource subject = (Resource) queryModel.asRDFNode(triple.getSubject());
-							newInstances.put(subject, (Resource)queryModel.asRDFNode(triple.getObject()));
-						}
-					}
-				}
-			}
+//			else {
+//				UpdateWrapper updateWrapper = (UpdateWrapper) commandWrapper;
+//				Map<String,RDFNode> templateBindings = commandWrapper.getTemplateBinding();
+//				Dataset dataset = ARQFactory.get().getDataset(queryModel);
+//				Update update = updateWrapper.getUpdate();
+//				Iterable<Graph> updateGraphs = UpdateUtil.getUpdatedGraphs(update, dataset.asDatasetGraph(), templateBindings);
+//				ControlledUpdateGraphStore cugs = new ControlledUpdateGraphStore(dataset, updateGraphs);
+//				
+//				if(commandWrapper.isThisDeep() && needsClass) {
+//					for(Statement s : queryModel.listStatements(null, RDF.type, cls).toList()) {
+//						Resource instance = s.getSubject();
+//						bindings.add(SPIN.THIS_VAR_NAME, instance);
+//						UpdateProcessor up = UpdateExecutionFactory.create(update, cugs, JenaUtil.asBinding(bindings));
+//						up.execute();
+//					}
+//				}
+//				else {
+//					if(needsClass) {
+//						bindings.add(SPINUtil.TYPE_CLASS_VAR_NAME, cls);
+//					}
+//					UpdateProcessor up = UpdateExecutionFactory.create(update, cugs, JenaUtil.asBinding(bindings));
+//					up.execute();
+//				}
+//				
+//				for(ControlledUpdateGraph cug : cugs.getControlledUpdateGraphs()) {
+//					changed |= cug.isChanged();
+//					for(Triple triple : cug.getAddedTriples()) {
+//						if(RDF.type.asNode().equals(triple.getPredicate()) && !triple.getObject().isLiteral()) {
+//							Resource subject = (Resource) queryModel.asRDFNode(triple.getSubject());
+//							newInstances.put(subject, (Resource)queryModel.asRDFNode(triple.getObject()));
+//						}
+//					}
+//				}
+//			}
 			
-			if(statistics != null) {
-				long endTime = System.currentTimeMillis();
-				long duration = (endTime - startTime);
-				Command spinCommand = commandWrapper.getSPINCommand();
-				String queryText = spinCommand != null ? SPINLabels.get().getLabel(spinCommand) : commandWrapper.getLabel();
-				if(queryLabel == null) {
-					queryLabel = queryText;
-				}
-				statistics.add(new SPINStatistics(queryLabel, queryText, duration, startTime, cls.asNode()));
-			}
-			
-			if(!newInstances.isEmpty()) {
-				List<Resource> newRs = new ArrayList<Resource>(newInstances.keySet());
-				SPINConstructors.construct(
-						queryModel, 
-						newRs, 
-						newTriples, 
-						new HashSet<Resource>(), 
-						class2Constructor,
-						statistics,
-						explanations, 
-						monitor);
-			}
+//			if(statistics != null) {
+//				long endTime = System.currentTimeMillis();
+//				long duration = (endTime - startTime);
+//				Command spinCommand = commandWrapper.getSPINCommand();
+//				String queryText = spinCommand != null ? SPINLabels.get().getLabel(spinCommand) : commandWrapper.getLabel();
+//				if(queryLabel == null) {
+//					queryLabel = queryText;
+//				}
+//				statistics.add(new SPINStatistics(queryLabel, queryText, duration, startTime, cls.asNode()));
+//			}
+//			
+//			if(!newInstances.isEmpty()) {
+//				List<Resource> newRs = new ArrayList<Resource>(newInstances.keySet());
+//				SPINConstructors.construct(
+//						queryModel, 
+//						newRs, 
+//						newTriples, 
+//						new HashSet<Resource>(), 
+//						class2Constructor,
+//						statistics,
+//						explanations, 
+//						monitor);
+//			}
 			
 			return changed;
-		}
-		else {
-			return false;
-		}
+//		}
+//		else {
+//			return false;
+//		}
 	}
 
 	
