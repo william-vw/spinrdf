@@ -86,12 +86,17 @@ public class SPINInferenceCmd {
 		Model unionModel = ModelFactory.createModelForGraph(multiUnion);
 
 		// Collect rules (and template calls) defined in OWL RL
+		long start_collect = System.nanoTime();
+		
 		Map<Resource, List<CommandWrapper>> cls2Query = SPINQueryFinder.getClass2QueryMap(unionModel, queryModel,
 				SPIN.rule, true, false);
 		Map<Resource, List<CommandWrapper>> cls2Constructor = SPINQueryFinder.getClass2QueryMap(queryModel, queryModel,
 				SPIN.constructor, true, false);
 		SPINRuleComparator comparator = new DefaultSPINRuleComparator(queryModel);
 
+		long end_collect = System.nanoTime();
+		double collect_time = ((double) (end_collect - start_collect) / 1000000000);
+		
 		if (verbose)
 			System.out.println("# rules: " + cls2Query.values().stream().mapToInt(l -> l.size()).sum());
 
@@ -111,7 +116,10 @@ public class SPINInferenceCmd {
 		}
 
 		long end = System.nanoTime();
-		System.out.println(((double) (end - start) / 1000000000));
+		double total_time = ((double) (end - start) / 1000000000);
+
+		System.out.println("collect rules: " + collect_time);
+		System.out.println("execute spin: " + total_time);
 	}
 
 	private static OntModel loadModelWithImports(String url) {
